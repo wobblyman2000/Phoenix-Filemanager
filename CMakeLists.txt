@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Project Name
-project(arch_commander VERSION 1.13.0 LANGUAGES CXX)
+project(Phoenix-Filemanager VERSION 1.13.0 LANGUAGES CXX)
 
 # Force C++17 Standard compliance for modern Qt6 capabilities
 set(CMAKE_CXX_STANDARD 17)
@@ -21,10 +21,10 @@ find_package(Qt6 COMPONENTS
 )
 
 # Define the Executable Build Target using your main source file
-add_executable(arch_commander main.cpp)
+add_executable(Phoenix-Filemanager main.cpp)
 
 # Link your executable with the required Qt6 modules
-target_link_libraries(arch_commander PRIVATE 
+target_link_libraries(Phoenix-Filemanager PRIVATE
     Qt6::Widgets 
     Qt6::Multimedia 
     Qt6::MultimediaWidgets

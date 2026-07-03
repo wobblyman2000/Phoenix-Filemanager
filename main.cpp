@@ -162,20 +162,38 @@ protected:
     }
 
     QVariant data(const QModelIndex &index, int role) const override {
-        if (role != Qt::ForegroundRole) return QSortFilterProxyModel::data(index, role);
         QModelIndex sourceIndex = mapToSource(index);
         QFileSystemModel *fsModel = qobject_cast<QFileSystemModel*>(sourceModel());
 
+        // Resolve absolute target filepath location safely
         QFileInfo fileInfo;
         if (fsModel) fileInfo = fsModel->fileInfo(sourceIndex);
         else fileInfo = QFileInfo(sourceModel()->data(sourceModel()->index(sourceIndex.row(), 1), Qt::DisplayRole).toString());
 
-        if (m_colorsEnabled && fileInfo.exists()) {
+        // ENGINE INJECTION: Dynamic Theater Media Cover Artwork Loader Loop (Column 0 Only)
+        if (role == Qt::DecorationRole && index.column() == 0 && fileInfo.isDir()) {
+            QString dirPath = fileInfo.absoluteFilePath();
+QStringList artCoverTemplates = {"folder.jpg", "cover.jpg", "cover.png", "album.png", "folder.png", "cd_case.png"};
+            for (const QString &artName : artCoverTemplates) {
+                QString targetArtPath = dirPath + "/" + artName;
+                if (QFile::exists(targetArtPath)) {
+                    QPixmap customJacket(targetArtPath);
+                    if (!customJacket.isNull()) {
+                        // Scales cleanly into list icon views or tree grid displays down to square dimensions
+                        return customJacket.scaled(48, 48, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                    }
+                }
+            }
+        }
+
+        // Fallback to original font coloring behavior properties
+        if (role == Qt::ForegroundRole && m_colorsEnabled && fileInfo.exists()) {
             QDateTime createdTime = fileInfo.birthTime().isValid() ? fileInfo.birthTime() : fileInfo.lastModified();
             qint64 hoursOld = createdTime.secsTo(QDateTime::currentDateTime()) / 3600;
             if (hoursOld >= 0 && hoursOld <= 24) return QColor(Qt::red);
             else if (hoursOld > 24 && hoursOld <= 168) return QColor(Qt::blue);
         }
+
         return QSortFilterProxyModel::data(index, role);
     }
 private:
@@ -1356,6 +1374,23 @@ private:
 
 int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+
+    // Global Theme Harmonization Sweeper for Phoenix-Filemanager
+    app.setStyleSheet(
+        "QWidget { background-color: #212529; color: #f8f9fa; font-family: 'Segoe UI', 'Inter', sans-serif; font-size: 13px; } "
+        "QTreeView, QListView { background-color: #1a1d20; border: 1px solid #2d3238; border-radius: 6px; padding: 4px; font-size: 13px; } "
+        "QTreeView::item, QListView::item { padding: 6px; border-radius: 4px; } "
+        "QTreeView::item:hover, QListView::item:hover { background-color: #2d3238; } "
+        "QTreeView::item:selected, QListView::item:selected { background-color: #0d6efd; color: #ffffff; font-weight: bold; } "
+        "QComboBox, QLineEdit { background-color: #2d3238; border: 1px solid #495057; border-radius: 4px; padding: 4px 8px; color: #ffffff; } "
+        "QComboBox:hover, QLineEdit:focus { border: 1px solid #3daee9; } "
+        "QMenuBar { background-color: #212529; border-bottom: 1px solid #2d3238; } "
+        "QMenuBar::item:selected { background-color: #343a40; } "
+        "QMenu { background-color: #1a1d20; border: 1px solid #2d3238; padding: 4px; border-radius: 6px; } "
+        "QMenu::item:selected { background-color: #0d6efd; color: #ffffff; } "
+        "QStatusBar { background-color: #1a1d20; border-top: 1px solid #2d3238; color: #adb5bd; font-size: 11px; }"
+        );
+
     MainWindow w; w.show();
     return app.exec();
 }
